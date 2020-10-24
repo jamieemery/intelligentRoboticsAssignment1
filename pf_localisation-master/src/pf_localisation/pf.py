@@ -23,6 +23,8 @@ class PFLocaliser(PFLocaliserBase):
        
     def initialise_particle_cloud(self, initialpose):
         """
+        Liviu to do
+
         Set particle cloud to initialpose plus noise
 
         Called whenever an initialpose message is received (to change the
@@ -41,6 +43,8 @@ class PFLocaliser(PFLocaliserBase):
     
     def update_particle_cloud(self, scan):
         """
+        Jamie and Traci to do
+
         This should use the supplied laser scan to update the current
         particle cloud. i.e. self.particlecloud should be updated.
         
@@ -52,6 +56,8 @@ class PFLocaliser(PFLocaliserBase):
 
     def estimate_pose(self):
         """
+        Marcia and Margarita to do
+
         This should calculate and return an updated robot pose estimate based
         on the particle cloud (self.particlecloud).
         
