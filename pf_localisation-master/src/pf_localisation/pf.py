@@ -75,8 +75,8 @@ class PFLocaliser(PFLocaliserBase):
 		p2 = self.particlecloud.poses[j];
 		distances.add(abs(p1.position-p2.position));
 
-	#sort the distances and keep the first half of them	
-	min_dist = sorted(distances)[:math.floor(len(distances)/2)];
+	#sort the distances and keep the first third of them	
+	min_dist = sorted(distances)[:math.ceil(len(distances)/3)-1];
 	#calculate each particle's number of appearances in the min_dist
 	counter = numpy.zeros(len(self.particlecloud));	
         for i = 1:len(self.particlecloud.poses):
@@ -88,9 +88,9 @@ class PFLocaliser(PFLocaliserBase):
 		   counter[j-1] += 1;
 
 	
-	#sort counter and keep the particles corresponding to the 2nd half
+	#sort counter and keep the particles corresponding to the last third
 	sort_count = sorted(range(len(counter)), key=lambda k: counter[k]);
-	sort_count = sort_count[math.floor(len(sort_count)/2):];
+	sort_count = sort_count[math.ceil(2*len(sort_count)/3)-1:];
 	wanted_set = set();
 	for i in sort_count:
 	    wanted_set.add(self.particlecloud[i]);
