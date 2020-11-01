@@ -2,6 +2,7 @@ from geometry_msgs.msg import Pose, PoseArray, Quaternion
 from pf_base import PFLocaliserBase
 import math
 import rospy
+
 import numpy
 
 from util import rotateQuaternion, getHeading
@@ -35,7 +36,44 @@ class PFLocaliser(PFLocaliserBase):
         :Return:
             | (geometry_msgs.msg.PoseArray) poses of the particles
         """
-        pass
+        # ----- Initialize the particle cloud as an empty array
+        self.particlecloud = []
+
+        """Create the noise to multiply by the random Gaussian number that will 
+        get added to each of the Poses, that are set to a random position
+        and orientation around the initial pose"""
+        sensorSigma=3 #variance
+        sensorMu=0 #mean
+        noise=sensorSigma * numpy.random.randn(1,2) + sensorMu
+
+        """Create a range for the ammount of random Gaussian values to generate
+        having the number of predicted readings be 10% of this value
+        and then generate those random Gaussian values"""
+
+        randomGauss = 10*NUMBER_PREDICTED_READINGS
+
+        for i in randomGauss:
+            gaussianRandomNum=gauss(0,1)   
+        
+        # ----- randomize yaw(heading)
+        x=random(0,180)
+        randomYaw=(MATH.PI/x)
+
+        iterator = 0
+        
+        """Set the particles to a random position and orientation around the initial pose
+        """
+        particleNumber = 10**2 # 10**3 # 10**4 # 10**5 experiment with different ammounts of particles
+
+        while iterator < particleNumber:
+            particle = [[initialpose.position.x + (gaussianRandomNum * noise), 
+                        initialpose.position.y + (gaussianRandomNum * noise), 
+                        initialpose.position.z + (gaussianRandomNum * noise)],
+                        rotateQuaternion(initialpose.quaternion, randomYaw)]
+            self.particlecloud.add(particle)
+            iterator += 1
+
+        return particlecloud
 
     def update_particle_cloud(self, scan):
         """
