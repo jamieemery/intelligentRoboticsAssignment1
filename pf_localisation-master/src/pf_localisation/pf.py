@@ -160,37 +160,35 @@ class PFLocaliser(PFLocaliserBase):
          """
         # remove the outliers, keep the densest particles
 
-        # compare all the possible distances between particles and "set"
-        # before there was a chance that a single particle is compared with itself
+        # compare all the possible distances between particles in our particlecloud
 
-        distances = set()
+        distances = []
         i = 0
         for p1 in self.particlecloud.poses:
-            i = i + 1
+            i += 1
             for p2 in self.particlecloud.poses[i:]:
                 distance = numpy.sqrt(((p1.position.x - p2.position.x)**2) \
                                       + ((p1.position.y - p2.position.y)**2) \
-                                      + ((p1.position.z - p2.position.z)**2))
-                distances.add(distance)
+                                      + ((p1.position.z - p2.position.z)**2)))
+                distances.append(distance)
 
         # sort the distances and keep the first third of them
         min_dist = sorted(distances)[:round(len(distances) / 3)]  # testing !!    !!!!!!!!!!!!!!!
         # calculate each particle's number of appearances in the min_dist
-        counter = numpy.zeros(len(self.particlecloud))
+        counter = numpy.zeros(len(self.particlecloud.poses))
         i = 0
-        j = 0
-        # how many particles is a specific particle close to?
+        # increase the number of appearances depending on if the distance is included in the min_dist set
         for p1 in self.particlecloud.poses:
-            i = i + 1
-            j = i - 1
+            i += 1
+            j = i
             for p2 in self.particlecloud.poses[i:]:
-                j = j + 1
                 distance = numpy.sqrt(((p1.position.x - p2.position.x)**2) \
                                       + ((p1.position.y - p2.position.y)**2) \
-                                      + ((p1.position.z - p2.position.z)**2))
+                                      + ((p1.position.z - p2.position.z)**2)))
                 if distance in min_dist:
                     counter[i - 1] += 1
                     counter[j] += 1
+                j += 1
 
 
         # sort counter and keep the particles corresponding to the last third
@@ -198,7 +196,7 @@ class PFLocaliser(PFLocaliserBase):
         sort_count = sort_count[round(2 * len(sort_count) / 3):]
         wanted_array=[]
         for i in sort_count:
-            wanted_array=self.particlecloud[i]
+            wanted_array.append(self.particlecloud[i])
 
         # find the mean position
         x_values = y_values = z_values = 0
