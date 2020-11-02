@@ -50,10 +50,12 @@ class PFLocaliser(PFLocaliserBase):
         having the number of predicted readings be 10% of this value
         and then generate those random Gaussian values"""
 
-        randomGauss = 10*NUMBER_PREDICTED_READINGS
+        randomGauss = 10*self.NUMBER_PREDICTED_READINGS
 
-        for i in randomGauss:
-            gaussianRandomNum=gauss(0,1)   
+        gaussianRandomNum = []
+
+        for i in range (0,randomGauss):
+            gaussianRandomNum[i]=gauss(0,1)   
         
         # ----- randomize yaw(heading)
         x=random(0,180)
@@ -70,10 +72,10 @@ class PFLocaliser(PFLocaliserBase):
                         initialpose.position.y + (gaussianRandomNum * noise), 
                         initialpose.position.z + (gaussianRandomNum * noise)],
                         rotateQuaternion(initialpose.quaternion, randomYaw)]
-            self.particlecloud.add(particle)
+            self.particlecloud.append(particle)
             iterator += 1
 
-        return particlecloud
+        return self.particlecloud.Poses
 
     def update_particle_cloud(self, scan):
         """
@@ -212,7 +214,7 @@ class PFLocaliser(PFLocaliserBase):
         est_pose.position = [meanX, meanY, meanZ]
 
         # find the mean orientation
-        x_values = y_values = z_values = w_values = 0;
+        x_values = y_values = z_values = w_values = 0
         for p in wanted_array.poses:
             x_values += p.orientation.x
             y_values += p.orientation.y
