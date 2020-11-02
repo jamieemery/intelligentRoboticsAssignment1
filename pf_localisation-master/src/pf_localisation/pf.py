@@ -6,7 +6,7 @@ import rospy
 import numpy
 
 from util import rotateQuaternion, getHeading
-from random import random
+import random
 
 from time import time
 
@@ -37,14 +37,14 @@ class PFLocaliser(PFLocaliserBase):
             | (geometry_msgs.msg.PoseArray) poses of the particles
         """
         # ----- Initialize the particle cloud as an empty array
-        self.particlecloud = []
+        self.particlecloud = PoseArray()
 
         """Create the noise to multiply by the random Gaussian number that will 
         get added to each of the Poses, that are set to a random position
         and orientation around the initial pose"""
         sensorSigma=3 #variance
         sensorMu=0 #mean
-        noise=sensorSigma * numpy.random.randn(1,2) + sensorMu
+        noise=sensorSigma * numpy.random.randn() + sensorMu
 
         """Create a range for the ammount of random Gaussian values to generate
         having the number of predicted readings be 10% of this value
@@ -55,11 +55,11 @@ class PFLocaliser(PFLocaliserBase):
         gaussianRandomNum = []
 
         for i in range (0,randomGauss):
-            gaussianRandomNum[i]=gauss(0,1)   
+            gaussianRandomNum.append(random.gauss(0,1))   
         
         # ----- randomize yaw(heading)
-        x=random(0,180)
-        randomYaw=(MATH.PI/x)
+        x=random.randint(0,180)
+        randomYaw=(math.pi/x)
 
         iterator = 0
         
@@ -68,14 +68,14 @@ class PFLocaliser(PFLocaliserBase):
         particleNumber = 10**2 # 10**3 # 10**4 # 10**5 experiment with different ammounts of particles
 
         while iterator < particleNumber:
-            particle = [[initialpose.position.x + (gaussianRandomNum * noise), 
-                        initialpose.position.y + (gaussianRandomNum * noise), 
-                        initialpose.position.z + (gaussianRandomNum * noise)],
-                        rotateQuaternion(initialpose.quaternion, randomYaw)]
-            self.particlecloud.append(particle)
+            particle = [[initialpose.pose.pose.position.x + (gaussianRandomNum[iterator] * noise), 
+                        initialpose.pose.pose.position.y + (gaussianRandomNum[iterator] * noise), 
+                        initialpose.pose.pose.position.z + (gaussianRandomNum[iterator] * noise)],
+                        rotateQuaternion(initialpose.pose.pose.orientation, randomYaw)]
+            self.particlecloud.poses.append(particle)
             iterator += 1
 
-        return self.particlecloud.Poses
+        return self.particlecloud
 
     def update_particle_cloud(self, scan):
         """
@@ -169,7 +169,7 @@ class PFLocaliser(PFLocaliserBase):
             for p2 in self.particlecloud.poses[i:]:
                 distance = numpy.sqrt(((p1.position.x - p2.position.x)**2) \
                                       + ((p1.position.y - p2.position.y)**2) \
-                                      + ((p1.position.z - p2.position.z)**2)))
+                                      + ((p1.position.z - p2.position.z)**2))
                 distances.append(distance)
 
         # sort the distances and keep the first third of them
@@ -184,7 +184,7 @@ class PFLocaliser(PFLocaliserBase):
             for p2 in self.particlecloud.poses[i:]:
                 distance = numpy.sqrt(((p1.position.x - p2.position.x)**2) \
                                       + ((p1.position.y - p2.position.y)**2) \
-                                      + ((p1.position.z - p2.position.z)**2)))
+                                      + ((p1.position.z - p2.position.z)**2))
                 if distance in min_dist:
                     counter[i - 1] += 1
                     counter[j] += 1
@@ -198,10 +198,12 @@ class PFLocaliser(PFLocaliserBase):
         for i in sort_count:
             wanted_array.append(self.particlecloud[i])
 
+	est_pose = Pose()
+
         # find the mean position
         x_values = y_values = z_values = 0
         for p in wanted_array.poses:
-            x_values += p.position.x     # means -->  x_values = x_values + p.position.x
+            x_values += p.position.x     
             y_values += p.position.y
             z_values += p.position.z
 
@@ -217,7 +219,7 @@ class PFLocaliser(PFLocaliserBase):
             x_values += p.orientation.x
             y_values += p.orientation.y
             z_values += p.orientation.z
-        z_values = z_values + p.orientation.w
+            w_values += p.orientation.w
         meanX = x_values / len(self.wanted_array.poses)
         meanY = y_values / len(self.wanted_array.poses)
         meanZ = z_values / len(self.wanted_array.poses)
