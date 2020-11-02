@@ -99,8 +99,8 @@ class PFLocaliser(PFLocaliserBase):
         Build the particle weights array using the get weight
         function provided
         """
-        for p in self.particlecloud:
-            particleWeights.Add(get_weight(self, scan, p))
+        for p in self.particlecloud.poses:
+            particleWeights.append(get_weight(self, scan, p))
 
         """
         From the weights calculated create the cummulative
@@ -112,7 +112,7 @@ class PFLocaliser(PFLocaliserBase):
 
         for w in particleWeights:
             cummulative += particleWeights[counter]
-            cummulativeWeights.Add(cummulative)
+            cummulativeWeights.append(cummulative)
 
 
         """
@@ -131,14 +131,14 @@ class PFLocaliser(PFLocaliserBase):
 
         for cm in cummulativeWeights:
             while cm > cummulativeMvalue:
-                newParticleCloud.Add(self.particlecloud[particleCounter])
+                newParticleCloud.append(self.particlecloud.poses[particleCounter])
                 cummulativeMValue += 1/self.NUMBER_PREDICTED_READINGS
             particleCounter += 1
 
         """
         Overwrite the old particle cloud with the new resampled one
         """
-        self.particlecloud = newParticleCloud
+        self.particlecloud.poses = newParticleCloud
 
         pass
 
