@@ -39,7 +39,7 @@ class PFLocaliser(PFLocaliserBase):
         # ----- Initialize the particle cloud as an empty array
         self.particlecloud = PoseArray()
 
-        """Create the noise to multiply by the random Gaussian number that will 
+        """Create the noise to multiply by the random Gaussian number that will
         get added to each of the Poses, that are set to a random position
         and orientation around the initial pose"""
         sensorSigma=3 #variance
@@ -55,23 +55,25 @@ class PFLocaliser(PFLocaliserBase):
         gaussianRandomNum = []
 
         for i in range (0,randomGauss):
-            gaussianRandomNum.append(random.gauss(0,1))   
-        
+            gaussianRandomNum.append(random.gauss(0,1))
+
         # ----- randomize yaw(heading)
         x=random.randint(0,180)
         randomYaw=(math.pi/x)
 
         iterator = 0
-        
+
         """Set the particles to a random position and orientation around the initial pose
         """
         particleNumber = 10**2 # 10**3 # 10**4 # 10**5 experiment with different ammounts of particles
 
         while iterator < particleNumber:
-            particle = [[initialpose.pose.pose.position.x + (gaussianRandomNum[iterator] * noise), 
-                        initialpose.pose.pose.position.y + (gaussianRandomNum[iterator] * noise), 
-                        initialpose.pose.pose.position.z + (gaussianRandomNum[iterator] * noise)],
-                        rotateQuaternion(initialpose.pose.pose.orientation, randomYaw)]
+            particle = Pose()
+            particle.position.x = initialpose.pose.pose.position.x + (gaussianRandomNum[iterator] * noise)
+            particle.position.y = initialpose.pose.pose.position.y + (gaussianRandomNum[iterator] * noise)
+            particle.position.z = initialpose.pose.pose.position.z + (gaussianRandomNum[iterator] * noise)
+            particle.orientation = rotateQuaternion(initialpose.pose.pose.orientation, randomYaw)
+
             self.particlecloud.poses.append(particle)
             iterator += 1
 
@@ -100,7 +102,7 @@ class PFLocaliser(PFLocaliserBase):
         function provided
         """
         for p in self.particlecloud.poses:
-            particleWeights.append(get_weight(self, scan, p))
+            particleWeights.append(self.sensor_model.get_weight(scan, p))
 
         """
         From the weights calculated create the cummulative
@@ -111,7 +113,7 @@ class PFLocaliser(PFLocaliserBase):
         cummulative = 0
 
         for w in particleWeights:
-            cummulative += particleWeights[counter]
+            cummulative += w
             cummulativeWeights.append(cummulative)
 
 
@@ -127,12 +129,14 @@ class PFLocaliser(PFLocaliserBase):
         is no longer hit and then it goes onto the next accumulative particle
         """
         particleCounter = 0
-        cummulativeMValue = 0
+        cummulativeMValue = 0.0
+
 
         for cm in cummulativeWeights:
-            while cm > cummulativeMvalue:
-                newParticleCloud.append(self.particlecloud.poses[particleCounter])
-                cummulativeMValue += 1/self.NUMBER_PREDICTED_READINGS
+            while cm > cummulativeMValue:
+		        if particleCounter < len(self.particlecloud.poses):
+                    newParticleCloud.append(self.particlecloud.poses[particleCounter])
+                    cummulativeMValue += self.NUMBER_PREDICTED_READINGS
             particleCounter += 1
 
         """
@@ -173,7 +177,7 @@ class PFLocaliser(PFLocaliserBase):
                 distances.append(distance)
 
         # sort the distances and keep the first third of them
-        min_dist = sorted(distances)[:round(len(distances) / 3)]  # testing !!    !!!!!!!!!!!!!!!
+        min_dist = sorted(distances)[:int(round(len(distances) / 3))]  # testing !!    !!!!!!!!!!!!!!!
         # calculate each particle's number of appearances in the min_dist
         counter = numpy.zeros(len(self.particlecloud.poses))
         i = 0
@@ -193,37 +197,40 @@ class PFLocaliser(PFLocaliserBase):
 
         # sort counter and keep the particles corresponding to the last third
         sort_count = sorted(range(len(counter)), key=lambda k: counter[k])
-        sort_count = sort_count[round(2 * len(sort_count) / 3):]
+        sort_count = sort_count[int(round(2 * len(sort_count) / 3)):]
         wanted_array=[]
         for i in sort_count:
-            wanted_array.append(self.particlecloud[i])
-
+            wanted_array.append(self.particlecloud.poses[i])
 	est_pose = Pose()
-
         # find the mean position
         x_values = y_values = z_values = 0
-        for p in wanted_array.poses:
-            x_values += p.position.x     
+        for p in wanted_array:
+            x_values += p.position.x     # means -->  x_values = x_values + p.position.x
             y_values += p.position.y
             z_values += p.position.z
 
 
-        meanX = x_values / len(self.wanted_array.poses)
-        meanY = y_values / len(self.wanted_array.poses)
-        meanZ = z_values / len(self.wanted_array.poses)
-        est_pose.position = [meanX, meanY, meanZ]
+        meanX = x_values / len(wanted_array)
+        meanY = y_values / len(wanted_array)
+        meanZ = z_values / len(wanted_array)
+        est_pose.position.x = meanX
+        est_pose.position.y = meanY
+        est_pose.position.z = meanZ
 
         # find the mean orientation
         x_values = y_values = z_values = w_values = 0
-        for p in wanted_array.poses:
+        for p in wanted_array:
             x_values += p.orientation.x
             y_values += p.orientation.y
             z_values += p.orientation.z
-            w_values += p.orientation.w
-        meanX = x_values / len(self.wanted_array.poses)
-        meanY = y_values / len(self.wanted_array.poses)
-        meanZ = z_values / len(self.wanted_array.poses)
-        meanW = w_values / len(self.wanted_array.poses)
-        est_pose.orientation = [meanX, meanY, meanZ, meanW]
+        z_values = z_values + p.orientation.w
+        meanX = x_values / len(wanted_array)
+        meanY = y_values / len(wanted_array)
+        meanZ = z_values / len(wanted_array)
+        meanW = w_values / len(wanted_array)
+        est_pose.orientation.x = meanX
+        est_pose.orientation.y = meanY
+        est_pose.orientation.z = meanZ
+        est_pose.orientation.w = meanW
 
         return est_pose
