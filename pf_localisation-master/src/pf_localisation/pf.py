@@ -95,53 +95,19 @@ class PFLocaliser(PFLocaliserBase):
         """
         newParticleCloud = []
         particleWeights = []
-        cummulativeWeights = []
 
-        """
-        Build the particle weights array using the get weight
-        function provided
-        """
         for p in self.particlecloud.poses:
             particleWeights.append(self.sensor_model.get_weight(scan, p))
 
-        """
-        From the weights calculated create the cummulative
-        weights array needed for the resampling algorithm.
-        If weights for 3 particles were [0.3, 0.5, 0.2] then
-        cummulative weights will be [0.3, 0.8, 1.0]
-        """
-        cummulative = 0
-
-        for w in particleWeights:
-            cummulative += w
-            cummulativeWeights.append(cummulative)
-
-
-        """
-        For the resampling process go through each of the cummulative
-        weights. With each weight add number of particles based on the
-        sampling size (defined as 20 in this case) and the accumulative
-        weight of the particle.
-
-        In example used above it would be 0.3 > 0 add one particle,
-        then check again as while loop 0.3 > 0.05(1/20) and then add
-        another particle. This is repeated until while loop criteria
-        is no longer hit and then it goes onto the next accumulative particle
-        """
-        particleCounter = 0
-        cummulativeMValue = 0.0
-
-
-        for cm in cummulativeWeights:
-            while cm > cummulativeMValue:
-		        if particleCounter < len(self.particlecloud.poses):
-                    newParticleCloud.append(self.particlecloud.poses[particleCounter])
-                    cummulativeMValue += self.NUMBER_PREDICTED_READINGS
-            particleCounter += 1
-
-        """
-        Overwrite the old particle cloud with the new resampled one
-        """
+        for i in range(len(self.particlecloud.poses)):
+            random = numpy.random.random()
+            csum = 0
+            for p in self.particlecloud.poses:
+                weight = self.sensor_model.get_weight(scan, p) / sum(particleWeights)
+                csum += weight
+                if csum >= random:
+                    newParticleCloud.append(copy.deepcopy(p))
+                    break
         self.particlecloud.poses = newParticleCloud
 
         pass
@@ -201,7 +167,7 @@ class PFLocaliser(PFLocaliserBase):
         wanted_array=[]
         for i in sort_count:
             wanted_array.append(self.particlecloud.poses[i])
-	est_pose = Pose()
+	    est_pose = Pose()
         # find the mean position
         x_values = y_values = z_values = 0
         for p in wanted_array:
