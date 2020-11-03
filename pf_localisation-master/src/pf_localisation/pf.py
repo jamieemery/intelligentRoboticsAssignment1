@@ -189,7 +189,7 @@ class PFLocaliser(PFLocaliserBase):
             x_values += p.orientation.x
             y_values += p.orientation.y
             z_values += p.orientation.z
-        z_values = z_values + p.orientation.w
+            w_values += p.orientation.w
         meanX = x_values / len(wanted_array)
         meanY = y_values / len(wanted_array)
         meanZ = z_values / len(wanted_array)
