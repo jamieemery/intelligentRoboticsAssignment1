@@ -2,7 +2,7 @@ from geometry_msgs.msg import Pose, PoseArray, Quaternion
 from pf_base import PFLocaliserBase
 import math
 import rospy
-
+import copy
 import numpy
 
 from util import rotateQuaternion, getHeading
@@ -96,17 +96,33 @@ class PFLocaliser(PFLocaliserBase):
         newParticleCloud = []
         particleWeights = []
 
+	    randomGauss = 10*self.NUMBER_PREDICTED_READINGS
+	    gaussianRandomNumX = []
+	    gaussianRandomNumY = []
+
+	    sensorSigma=0.1 #variance
+        sensorMu=0 #mean
+        noise=sensorSigma * numpy.random.randn() + sensorMu
+
+        for i in range (0,randomGauss):
+            gaussianRandomNumX.append(random.gauss(0,1))
+	        gaussianRandomNumY.append(random.gauss(0,1))
+
         for p in self.particlecloud.poses:
             particleWeights.append(self.sensor_model.get_weight(scan, p))
 
         for i in range(len(self.particlecloud.poses)):
-            random = numpy.random.random()
+            randomSelection = numpy.random.random()
             csum = 0
             for p in self.particlecloud.poses:
                 weight = self.sensor_model.get_weight(scan, p) / sum(particleWeights)
                 csum += weight
-                if csum >= random:
-                    newParticleCloud.append(copy.deepcopy(p))
+                if csum >= randomSelection:
+	                newParticle = copy.deepcopy(p)
+                    newParticle.position.x = newParticle.position.x + (gaussianRandomNumX[i] * noise)
+                    newParticle.position.y = newParticle.position.y + (gaussianRandomNumY[i] * noise)
+                    newParticle.position.z = newParticle.position.z
+                    newParticleCloud.append(newParticle)
                     break
         self.particlecloud.poses = newParticleCloud
 
