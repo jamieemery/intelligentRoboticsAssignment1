@@ -142,28 +142,28 @@ class SensorModel(object):
               data given the estimated map location
          """
         pz = 0.0
-    
+
         # ----- Part 1: good, but noisy, hit
         z = obs_range - map_range
         pz += ( self.z_hit *
                 math.exp(-(z * z) / (2 * self.sigma_hit * self.sigma_hit)) )
-    
+
         # ----- Part 2: short reading from unexpected obstacle (e.g., a person)
         if z < 0:
             pz += ( self.z_short * self.lambda_short *
                     math.exp(-self.lambda_short*obs_range) )
-    
+
         # ----- Part 3: Failure to detect obstacle, reported as max-range
         if obs_range == self.scan_range_max:
             pz += self.z_max * 1.0
-    
+
         # ----- Part 4: Random measurements
         if obs_range < self.scan_range_max:
             pz += self.z_rand * 1.0/ self.scan_range_max
-    
+
+        if math.isnan(pz):
+            return 0.0
         assert(pz <= 1.0)
         assert(pz >= 0.0)
-        
-        return pz
 
-   
+        return pz
