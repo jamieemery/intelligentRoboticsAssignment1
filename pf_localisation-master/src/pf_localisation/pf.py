@@ -46,33 +46,33 @@ class PFLocaliser(PFLocaliserBase):
         sensorMu=0 #mean
         noise=sensorSigma * numpy.random.randn() + sensorMu
 
-        """Create a range for the ammount of random Gaussian values to generate
-        having the number of predicted readings be 10% of this value
-        and then generate those random Gaussian values"""
-
+        """Create a range for the ammount of random Gaussian values to generate """
         randomGauss = 10*self.NUMBER_PREDICTED_READINGS
 
-        gaussianRandomNum = []
+        gaussianRandomNumX = []
+	    gaussianRandomNumY = []
+	    randomYawArray = []
 
         for i in range (0,randomGauss):
-            gaussianRandomNum.append(random.gauss(0,1))
-
-        # ----- randomize yaw(heading)
-        x=random.randint(0,180)
-        randomYaw=(math.pi/x)
+            gaussianRandomNumX.append(random.gauss(0,1))
+	        gaussianRandomNumY.append(random.gauss(0,1))
+            x=random.randint(1,180)
+            randomYaw=(math.pi/x)
+	        randomYawArray.append(randomYaw)
 
         iterator = 0
 
-        """Set the particles to a random position and orientation around the initial pose
+        """
+	 Set the particles to a random position and orientation around the initial pose
         """
         particleNumber = 10**2 # 10**3 # 10**4 # 10**5 experiment with different ammounts of particles
 
         while iterator < particleNumber:
             particle = Pose()
-            particle.position.x = initialpose.pose.pose.position.x + (gaussianRandomNum[iterator] * noise)
-            particle.position.y = initialpose.pose.pose.position.y + (gaussianRandomNum[iterator] * noise)
-            particle.position.z = initialpose.pose.pose.position.z + (gaussianRandomNum[iterator] * noise)
-            particle.orientation = rotateQuaternion(initialpose.pose.pose.orientation, randomYaw)
+            particle.position.x = initialpose.pose.pose.position.x + (gaussianRandomNumX[iterator] * noise)
+            particle.position.y = initialpose.pose.pose.position.y + (gaussianRandomNumY[iterator] * noise)
+            particle.position.z = initialpose.pose.pose.position.z
+            particle.orientation = rotateQuaternion(initialpose.pose.pose.orientation, randomYawArray[iterator])
 
             self.particlecloud.poses.append(particle)
             iterator += 1
