@@ -50,20 +50,20 @@ class PFLocaliser(PFLocaliserBase):
         randomGauss = 10*self.NUMBER_PREDICTED_READINGS
 
         gaussianRandomNumX = []
-	gaussianRandomNumY = []
-	randomYawArray = []
+        gaussianRandomNumY = []
+        randomYawArray = []
 
         for i in range (0,randomGauss):
             gaussianRandomNumX.append(random.gauss(0,1))
-	    gaussianRandomNumY.append(random.gauss(0,1))
+            gaussianRandomNumY.append(random.gauss(0,1))
             x=random.randint(1,180)
             randomYaw=(math.pi/x)
-	    randomYawArray.append(randomYaw)
+            randomYawArray.append(randomYaw)
 
         iterator = 0
 
         """
-	 Set the particles to a random position and orientation around the initial pose
+	    Set the particles to a random position and orientation around the initial pose
         """
         particleNumber = 10**2 # 10**3 # 10**4 # 10**5 experiment with different ammounts of particles
 
@@ -95,18 +95,18 @@ class PFLocaliser(PFLocaliserBase):
         """
         newParticleCloud = []
         particleWeights = []
+        
+        randomGauss = 10*self.NUMBER_PREDICTED_READINGS
+        gaussianRandomNumX = []
+        gaussianRandomNumY = []
 
-	randomGauss = 10*self.NUMBER_PREDICTED_READINGS
-	gaussianRandomNumX = []
-	gaussianRandomNumY = []
-
-	sensorSigma=0.1 #variance
+        sensorSigma=0.1 #variance
         sensorMu=0 #mean
         noise=sensorSigma * numpy.random.randn() + sensorMu
 
         for i in range (0,randomGauss):
             gaussianRandomNumX.append(random.gauss(0,1))
-	    gaussianRandomNumY.append(random.gauss(0,1))
+        gaussianRandomNumY.append(random.gauss(0,1))
 
         for p in self.particlecloud.poses:
             particleWeights.append(self.sensor_model.get_weight(scan, p))
@@ -118,7 +118,7 @@ class PFLocaliser(PFLocaliserBase):
                 weight = self.sensor_model.get_weight(scan, p) / sum(particleWeights)
                 csum += weight
                 if csum >= randomSelection:
-	            newParticle = copy.deepcopy(p)
+                    newParticle = copy.deepcopy(p)
                     newParticle.position.x = newParticle.position.x + (gaussianRandomNumX[i] * noise)
                     newParticle.position.y = newParticle.position.y + (gaussianRandomNumY[i] * noise)
                     newParticle.position.z = newParticle.position.z
@@ -183,7 +183,7 @@ class PFLocaliser(PFLocaliserBase):
         wanted_array=[]
         for i in sort_count:
             wanted_array.append(self.particlecloud.poses[i])
-	    est_pose = Pose()
+        est_pose = Pose()
         # find the mean position
         x_values = y_values = z_values = 0
         for p in wanted_array:
